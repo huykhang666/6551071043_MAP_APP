@@ -1,4 +1,5 @@
 using ClosedXML.Excel;
+using QuanLyKhachSan.ChiTietTienNghi;
 using QuanLyKhachSan.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -149,9 +150,10 @@ namespace QuanLyKhachSan.LoaiPhong
             }
             else if (tenCot == "colTienNghi")
             {
-                MessageBox.Show(
-                    $"Chức năng chi tiết tiện nghi của loại phòng {tenLPH} ({maLPH}) đang được xây dựng.",
-                    "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                using (var formTienNghi = new FormDanhSachChiTietTienNghi(maLPH, tenLPH ?? ""))
+                {
+                    formTienNghi.ShowDialog();
+                }
             }
         }
 
