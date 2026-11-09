@@ -125,12 +125,12 @@ namespace QuanLyKhachSan
 
         private void button9_Click(object sender, EventArgs e)
         {
-            HienThiDangPhatTrien("Danh sách đặt phòng");
+            LoadFormCon(new PhieuThue.FormDanhSachPhieuThue());
         }
 
         private void button10_Click(object sender, EventArgs e)
         {
-            HienThiDangPhatTrien("Danh sách hóa đơn");
+            LoadFormCon(new HoaDon.FormDanhSachHoaDon());
         }
 
         private void button11_Click(object sender, EventArgs e)
@@ -155,12 +155,12 @@ namespace QuanLyKhachSan
 
         private void button5_Click(object sender, EventArgs e)
         {
-            HienThiDangPhatTrien("Danh sách tài khoản");
+            LoadFormCon(new TaiKhoan.FormDanhSachTaiKhoan());
         }
 
         private void button13_Click(object sender, EventArgs e)
         {
-            HienThiDangPhatTrien("Thống kê");
+            LoadFormCon(new ThongKe.FormThongKe());
         }
     }
 }
