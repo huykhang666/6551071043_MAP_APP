@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -18,9 +20,43 @@ namespace QuanLyKhachSan.ThongKe
     {
         private readonly CultureInfo viVN = new CultureInfo("vi-VN");
 
+        // Dữ liệu phục vụ vẽ biểu đồ GDI+
+        private sealed class ThongKeLoaiPhongItem
+        {
+            public string TenLPH { get; set; } = "";
+            public int SoLuot { get; set; }
+            public decimal DoanhThu { get; set; }
+        }
+
+        private sealed class ThongKeDichVuItem
+        {
+            public string TenDV { get; set; } = "";
+            public int SoLuong { get; set; }
+            public decimal TongTien { get; set; }
+        }
+
+        private List<ThongKeLoaiPhongItem> _duLieuLoaiPhong = new List<ThongKeLoaiPhongItem>();
+        private List<ThongKeDichVuItem> _duLieuTopDV = new List<ThongKeDichVuItem>();
+
+        // Bảng màu cho biểu đồ
+        private readonly Color[] _mauBieuDo = new[]
+        {
+            Color.FromArgb(78, 115, 223),  // Xanh dương
+            Color.FromArgb(28, 200, 138),  // Xanh ngọc
+            Color.FromArgb(54, 185, 204),  // Xanh da trời
+            Color.FromArgb(246, 194, 62),  // Vàng hổ phách
+            Color.FromArgb(231, 74, 59),   // Đỏ cam
+            Color.FromArgb(111, 66, 193),  // Tím
+            Color.FromArgb(253, 126, 20),  // Cam
+            Color.FromArgb(108, 117, 125)  // Xám
+        };
+
         public FormThongKe()
         {
             InitializeComponent();
+
+            pnlChartLoaiPhong.Resize += (s, e) => pnlChartLoaiPhong.Invalidate();
+            pnlChartTopDV.Resize += (s, e) => pnlChartTopDV.Invalidate();
         }
 
         private void FormThongKe_Load(object? sender, EventArgs e)
@@ -231,9 +267,9 @@ namespace QuanLyKhachSan.ThongKe
                 lblCardSoPhong.Text = soLuotThue + " lượt";
 
                 // Thống kê theo loại phòng
-                var dsLoaiPhong = danhSachHD
+                _duLieuLoaiPhong = danhSachHD
                     .GroupBy(h => h.TenLPH ?? "Khác")
-                    .Select(g => new
+                    .Select(g => new ThongKeLoaiPhongItem
                     {
                         TenLPH = g.Key,
                         SoLuot = g.Count(),
@@ -242,15 +278,15 @@ namespace QuanLyKhachSan.ThongKe
                     .OrderByDescending(x => x.DoanhThu)
                     .ToList();
 
-                dtgDoanhThuLoaiPhong.DataSource = dsLoaiPhong;
+                dtgDoanhThuLoaiPhong.DataSource = _duLieuLoaiPhong;
 
                 // Thống kê Top dịch vụ
                 var dsMaCtdp = danhSachHD.Select(h => h.MaCtdp).Distinct().ToList();
-                var topDV = db.Ctdvs
+                _duLieuTopDV = db.Ctdvs
                     .AsNoTracking()
                     .Where(c => c.DaXoa != true && dsMaCtdp.Contains(c.MaCtdp))
                     .GroupBy(c => new { c.MaDv, c.MaDvNavigation.TenDv, c.MaDvNavigation.DonGia })
-                    .Select(g => new
+                    .Select(g => new ThongKeDichVuItem
                     {
                         TenDV = g.Key.TenDv,
                         SoLuong = g.Sum(c => c.Sl),
@@ -262,7 +298,7 @@ namespace QuanLyKhachSan.ThongKe
 
                 dtgTopDichVu.Rows.Clear();
                 int hang = 1;
-                foreach (var item in topDV)
+                foreach (var item in _duLieuTopDV)
                 {
                     Image? iconHang = null;
                     if (hang == 1) iconHang = Properties.Resources.top1;
@@ -292,10 +328,250 @@ namespace QuanLyKhachSan.ThongKe
                 dtgDoanhThuLoaiPhong.ClearSelection();
                 dtgTopDichVu.ClearSelection();
                 dtgChiTietHoaDon.ClearSelection();
+
+                // Vẽ lại 2 biểu đồ GDI+ với dữ liệu mới
+                pnlChartLoaiPhong.Invalidate();
+                pnlChartTopDV.Invalidate();
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Lỗi tính toán thống kê: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        // ==========================================
+        // VẼ BIỂU ĐỒ TRÒN (PIE/DONUT CHART) BẰNG GDI+
+        // ==========================================
+        private void pnlChartLoaiPhong_Paint(object? sender, PaintEventArgs e)
+        {
+            var g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
+
+            int pWidth = pnlChartLoaiPhong.Width;
+            int pHeight = pnlChartLoaiPhong.Height;
+
+            if (_duLieuLoaiPhong.Count == 0 || _duLieuLoaiPhong.All(x => x.DoanhThu <= 0))
+            {
+                using var fontThongBao = new Font("Segoe UI", 12F, FontStyle.Italic);
+                using var brushThongBao = new SolidBrush(Color.Gray);
+                string tb = "Chưa có dữ liệu doanh thu trong khoảng thời gian này.";
+                var size = g.MeasureString(tb, fontThongBao);
+                g.DrawString(tb, fontThongBao, brushThongBao, (pWidth - size.Width) / 2, (pHeight - size.Height) / 2);
+                return;
+            }
+
+            decimal tongDoanhThu = _duLieuLoaiPhong.Sum(x => x.DoanhThu);
+
+            // Kích thước vòng tròn Donut
+            int minDim = Math.Min(pWidth, pHeight);
+            int pieSize = (int)(minDim * 0.58f);
+            int pieX = 25;
+            int pieY = (pHeight - pieSize) / 2 - 15;
+            if (pieY < 20) pieY = 20;
+            var pieRect = new Rectangle(pieX, pieY, pieSize, pieSize);
+
+            float startAngle = -90f;
+            using var penWhite = new Pen(Color.White, 2.5f);
+
+            // Vẽ từng hình quạt biểu đồ tròn
+            for (int i = 0; i < _duLieuLoaiPhong.Count; i++)
+            {
+                var item = _duLieuLoaiPhong[i];
+                float sweepAngle = (float)(item.DoanhThu / tongDoanhThu * 360m);
+                if (sweepAngle <= 0.01f) continue;
+
+                Color mau = _mauBieuDo[i % _mauBieuDo.Length];
+                using (var brush = new SolidBrush(mau))
+                {
+                    g.FillPie(brush, pieRect, startAngle, sweepAngle);
+                }
+                g.DrawPie(penWhite, pieRect, startAngle, sweepAngle);
+
+                startAngle += sweepAngle;
+            }
+
+            // Vẽ lỗ tròn ở giữa để tạo thành Donut Chart hiện đại
+            int holeSize = (int)(pieSize * 0.52f);
+            int holeX = pieX + (pieSize - holeSize) / 2;
+            int holeY = pieY + (pieSize - holeSize) / 2;
+            var holeRect = new Rectangle(holeX, holeY, holeSize, holeSize);
+            using (var brushHole = new SolidBrush(Color.White))
+            {
+                g.FillEllipse(brushHole, holeRect);
+            }
+            g.DrawEllipse(penWhite, holeRect);
+
+            // Chữ "Tổng thu" ở giữa Donut
+            using (var fontGiuaTitle = new Font("Segoe UI", 9.5F, FontStyle.Regular))
+            using (var fontGiuaValue = new Font("Segoe UI", 11.5F, FontStyle.Bold))
+            using (var brushText = new SolidBrush(Color.FromArgb(40, 40, 40)))
+            {
+                string textTitle = "Tổng thu";
+                string textVal = tongDoanhThu >= 1_000_000 
+                    ? (tongDoanhThu / 1_000_000m).ToString("0.#") + " tr"
+                    : tongDoanhThu.ToString("N0");
+
+                var sTitle = g.MeasureString(textTitle, fontGiuaTitle);
+                var sVal = g.MeasureString(textVal, fontGiuaValue);
+
+                g.DrawString(textTitle, fontGiuaTitle, brushText, holeX + (holeSize - sTitle.Width) / 2, holeY + holeSize / 2 - sTitle.Height);
+                g.DrawString(textVal, fontGiuaValue, new SolidBrush(Color.FromArgb(21, 101, 192)), holeX + (holeSize - sVal.Width) / 2, holeY + holeSize / 2 + 2);
+            }
+
+            // Vẽ phần Chú thích (Legend) bên phải
+            int legendX = pieX + pieSize + 25;
+            int legendY = 35;
+            using var fontLegendTitle = new Font("Segoe UI Semibold", 10.5F, FontStyle.Bold);
+            using var fontLegendSub = new Font("Segoe UI", 9F, FontStyle.Regular);
+            using var brushSub = new SolidBrush(Color.FromArgb(90, 90, 90));
+
+            for (int i = 0; i < _duLieuLoaiPhong.Count; i++)
+            {
+                var item = _duLieuLoaiPhong[i];
+                Color mau = _mauBieuDo[i % _mauBieuDo.Length];
+                decimal phanTram = (item.DoanhThu / tongDoanhThu) * 100m;
+
+                // Ô vuông màu
+                using (var brushBox = new SolidBrush(mau))
+                {
+                    g.FillRectangle(brushBox, legendX, legendY + 3, 14, 14);
+                }
+                g.DrawRectangle(penWhite, legendX, legendY + 3, 14, 14);
+
+                // Tên loại phòng & %
+                string tieuDe = $"{item.TenLPH} ({phanTram:0.0}%)";
+                using (var brushTitle = new SolidBrush(Color.FromArgb(30, 30, 30)))
+                {
+                    g.DrawString(tieuDe, fontLegendTitle, brushTitle, legendX + 22, legendY);
+                }
+
+                // Chi tiết số tiền & lượt
+                string sub = $"{item.DoanhThu:N0} VND - {item.SoLuot} lượt";
+                g.DrawString(sub, fontLegendSub, brushSub, legendX + 22, legendY + 20);
+
+                legendY += 46;
+                if (legendY > pHeight - 40) break;
+            }
+        }
+
+        // ==========================================
+        // VẼ BIỂU ĐỒ CỘT (BAR/COLUMN CHART) BẰNG GDI+
+        // ==========================================
+        private void pnlChartTopDV_Paint(object? sender, PaintEventArgs e)
+        {
+            var g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
+
+            int pWidth = pnlChartTopDV.Width;
+            int pHeight = pnlChartTopDV.Height;
+
+            if (_duLieuTopDV.Count == 0 || _duLieuTopDV.All(x => x.SoLuong <= 0))
+            {
+                using var fontThongBao = new Font("Segoe UI", 12F, FontStyle.Italic);
+                using var brushThongBao = new SolidBrush(Color.Gray);
+                string tb = "Chưa có dữ liệu dịch vụ sử dụng trong kỳ.";
+                var size = g.MeasureString(tb, fontThongBao);
+                g.DrawString(tb, fontThongBao, brushThongBao, (pWidth - size.Width) / 2, (pHeight - size.Height) / 2);
+                return;
+            }
+
+            // Lấy tối đa top 6 dịch vụ để biểu đồ thoáng đẹp
+            var topList = _duLieuTopDV.Take(6).ToList();
+            int maxSL = topList.Max(x => x.SoLuong);
+            if (maxSL <= 0) maxSL = 1;
+
+            // Làm tròn thang đo Y lên bậc chẵn
+            int stepY = Math.Max(1, (int)Math.Ceiling(maxSL / 4.0));
+            int maxY = stepY * 4;
+
+            int padLeft = 55;
+            int padRight = 30;
+            int padTop = 40;
+            int padBottom = 85;
+
+            int plotWidth = pWidth - padLeft - padRight;
+            int plotHeight = pHeight - padTop - padBottom;
+            if (plotWidth <= 50 || plotHeight <= 50) return;
+
+            using var penGrid = new Pen(Color.FromArgb(235, 235, 235), 1f) { DashStyle = DashStyle.Dash };
+            using var penAxis = new Pen(Color.FromArgb(180, 180, 180), 1.5f);
+            using var fontAxis = new Font("Segoe UI", 9F, FontStyle.Regular);
+            using var brushAxis = new SolidBrush(Color.FromArgb(100, 100, 100));
+
+            // Vẽ lưới trục Y và nhãn số
+            for (int i = 0; i <= 4; i++)
+            {
+                int val = stepY * i;
+                float y = padTop + plotHeight - (i / 4f) * plotHeight;
+
+                g.DrawLine(penGrid, padLeft, y, padLeft + plotWidth, y);
+
+                string valStr = val.ToString();
+                var sSize = g.MeasureString(valStr, fontAxis);
+                g.DrawString(valStr, fontAxis, brushAxis, padLeft - sSize.Width - 8, y - sSize.Height / 2);
+            }
+
+            // Vẽ trục X cơ sở
+            g.DrawLine(penAxis, padLeft, padTop + plotHeight, padLeft + plotWidth, padTop + plotHeight);
+
+            // Vẽ từng cột dịch vụ
+            float colSlot = plotWidth / (float)topList.Count;
+            float barWidth = Math.Min(55f, colSlot * 0.55f);
+
+            using var fontLabel = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
+            using var fontValue = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            using var brushTextValue = new SolidBrush(Color.FromArgb(30, 30, 30));
+
+            for (int i = 0; i < topList.Count; i++)
+            {
+                var dv = topList[i];
+                float barHeight = (dv.SoLuong / (float)maxY) * plotHeight;
+                float x = padLeft + i * colSlot + (colSlot - barWidth) / 2;
+                float y = padTop + plotHeight - barHeight;
+
+                var barRect = new RectangleF(x, y, barWidth, barHeight);
+
+                // Màu sắc cột gradient
+                Color colStart = _mauBieuDo[i % _mauBieuDo.Length];
+                Color colEnd = Color.FromArgb(Math.Min(255, colStart.R + 40), Math.Min(255, colStart.G + 40), Math.Min(255, colStart.B + 40));
+
+                if (barHeight > 2)
+                {
+                    using (var brushBar = new LinearGradientBrush(barRect, colStart, colEnd, LinearGradientMode.Vertical))
+                    {
+                        g.FillRectangle(brushBar, barRect);
+                    }
+                }
+                else
+                {
+                    using var brushFlat = new SolidBrush(colStart);
+                    g.FillRectangle(brushFlat, x, padTop + plotHeight - 3, barWidth, 3);
+                }
+
+                // Vẽ viền trên cột
+                using var penBorder = new Pen(colStart, 1f);
+                g.DrawRectangle(penBorder, barRect.X, barRect.Y, barRect.Width, barRect.Height);
+
+                // Vẽ số lượng trên đầu cột
+                string valText = dv.SoLuong.ToString();
+                var sVal = g.MeasureString(valText, fontValue);
+                g.DrawString(valText, fontValue, brushTextValue, x + (barWidth - sVal.Width) / 2, y - sVal.Height - 3);
+
+                // Tên dịch vụ bên dưới (Cắt ngắn nếu quá dài để không bị tràn chữ)
+                string ten = dv.TenDV;
+                if (ten.Length > 12) ten = ten.Substring(0, 10) + "..";
+
+                var sName = g.MeasureString(ten, fontLabel);
+                g.DrawString(ten, fontLabel, brushAxis, x + (barWidth - sName.Width) / 2, padTop + plotHeight + 8);
+
+                // Doanh thu dịch vụ bên dưới tên
+                string tienStr = dv.TongTien >= 1_000_000 
+                    ? (dv.TongTien / 1_000_000m).ToString("0.#") + " tr"
+                    : dv.TongTien.ToString("N0");
+                var sTien = g.MeasureString(tienStr, fontAxis);
+                g.DrawString(tienStr, fontAxis, new SolidBrush(Color.FromArgb(120, 120, 120)), x + (barWidth - sTien.Width) / 2, padTop + plotHeight + 28);
             }
         }
 

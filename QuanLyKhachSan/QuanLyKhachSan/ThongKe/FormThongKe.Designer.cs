@@ -28,8 +28,6 @@ namespace QuanLyKhachSan.ThongKe
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             panelHeader = new Panel();
             btnXuatExcel = new Button();
             btnThongKe = new Button();
@@ -54,6 +52,14 @@ namespace QuanLyKhachSan.ThongKe
             lblCardSoPhong = new Label();
             lblTitleCard4 = new Label();
             picCard4 = new PictureBox();
+            tabControlThongKe = new TabControl();
+            tabBieuDo = new TabPage();
+            splitBieuDo = new SplitContainer();
+            groupBieuDoLoaiPhong = new GroupBox();
+            pnlChartLoaiPhong = new Panel();
+            groupBieuDoTopDV = new GroupBox();
+            pnlChartTopDV = new Panel();
+            tabBangDuLieu = new TabPage();
             groupBoxLoaiPhong = new GroupBox();
             dtgDoanhThuLoaiPhong = new DataGridView();
             groupBoxTopDV = new GroupBox();
@@ -69,6 +75,15 @@ namespace QuanLyKhachSan.ThongKe
             ((System.ComponentModel.ISupportInitialize)picCard3).BeginInit();
             panelCard4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)picCard4).BeginInit();
+            tabControlThongKe.SuspendLayout();
+            tabBieuDo.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)splitBieuDo).BeginInit();
+            splitBieuDo.Panel1.SuspendLayout();
+            splitBieuDo.Panel2.SuspendLayout();
+            splitBieuDo.SuspendLayout();
+            groupBieuDoLoaiPhong.SuspendLayout();
+            groupBieuDoTopDV.SuspendLayout();
+            tabBangDuLieu.SuspendLayout();
             groupBoxLoaiPhong.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dtgDoanhThuLoaiPhong).BeginInit();
             groupBoxTopDV.SuspendLayout();
@@ -98,6 +113,7 @@ namespace QuanLyKhachSan.ThongKe
             // 
             btnXuatExcel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnXuatExcel.BackColor = Color.DarkTurquoise;
+            btnXuatExcel.Cursor = Cursors.Hand;
             btnXuatExcel.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             btnXuatExcel.ForeColor = Color.White;
             btnXuatExcel.Location = new Point(995, 16);
@@ -112,6 +128,7 @@ namespace QuanLyKhachSan.ThongKe
             // 
             btnThongKe.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnThongKe.BackColor = Color.SeaGreen;
+            btnThongKe.Cursor = Cursors.Hand;
             btnThongKe.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             btnThongKe.ForeColor = Color.White;
             btnThongKe.Location = new Point(870, 16);
@@ -351,13 +368,114 @@ namespace QuanLyKhachSan.ThongKe
             picCard4.TabIndex = 0;
             picCard4.TabStop = false;
             // 
+            // tabControlThongKe
+            // 
+            tabControlThongKe.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            tabControlThongKe.Controls.Add(tabBieuDo);
+            tabControlThongKe.Controls.Add(tabBangDuLieu);
+            tabControlThongKe.Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold);
+            tabControlThongKe.ItemSize = new Size(180, 36);
+            tabControlThongKe.Location = new Point(12, 220);
+            tabControlThongKe.Name = "tabControlThongKe";
+            tabControlThongKe.SelectedIndex = 0;
+            tabControlThongKe.Size = new Size(1128, 620);
+            tabControlThongKe.SizeMode = TabSizeMode.Fixed;
+            tabControlThongKe.TabIndex = 5;
+            // 
+            // tabBieuDo
+            // 
+            tabBieuDo.BackColor = Color.FromArgb(248, 249, 250);
+            tabBieuDo.Controls.Add(splitBieuDo);
+            tabBieuDo.Location = new Point(4, 40);
+            tabBieuDo.Name = "tabBieuDo";
+            tabBieuDo.Padding = new Padding(8);
+            tabBieuDo.Size = new Size(1120, 576);
+            tabBieuDo.TabIndex = 0;
+            tabBieuDo.Text = "📊 Biểu đồ trực quan";
+            // 
+            // splitBieuDo
+            // 
+            splitBieuDo.Dock = DockStyle.Fill;
+            splitBieuDo.Location = new Point(8, 8);
+            splitBieuDo.Name = "splitBieuDo";
+            // 
+            // splitBieuDo.Panel1
+            // 
+            splitBieuDo.Panel1.Controls.Add(groupBieuDoLoaiPhong);
+            // 
+            // splitBieuDo.Panel2
+            // 
+            splitBieuDo.Panel2.Controls.Add(groupBieuDoTopDV);
+            splitBieuDo.Size = new Size(1104, 560);
+            splitBieuDo.SplitterDistance = 550;
+            splitBieuDo.TabIndex = 0;
+            // 
+            // groupBieuDoLoaiPhong
+            // 
+            groupBieuDoLoaiPhong.Controls.Add(pnlChartLoaiPhong);
+            groupBieuDoLoaiPhong.Dock = DockStyle.Fill;
+            groupBieuDoLoaiPhong.Font = new Font("Segoe UI Semibold", 10.5F, FontStyle.Bold);
+            groupBieuDoLoaiPhong.Location = new Point(0, 0);
+            groupBieuDoLoaiPhong.Name = "groupBieuDoLoaiPhong";
+            groupBieuDoLoaiPhong.Size = new Size(550, 560);
+            groupBieuDoLoaiPhong.TabIndex = 0;
+            groupBieuDoLoaiPhong.TabStop = false;
+            groupBieuDoLoaiPhong.Text = "Cơ cấu doanh thu theo Loại phòng (Biểu đồ tròn GDI+)";
+            // 
+            // pnlChartLoaiPhong
+            // 
+            pnlChartLoaiPhong.BackColor = Color.White;
+            pnlChartLoaiPhong.BorderStyle = BorderStyle.FixedSingle;
+            pnlChartLoaiPhong.Dock = DockStyle.Fill;
+            pnlChartLoaiPhong.Location = new Point(3, 27);
+            pnlChartLoaiPhong.Name = "pnlChartLoaiPhong";
+            pnlChartLoaiPhong.Size = new Size(544, 530);
+            pnlChartLoaiPhong.TabIndex = 0;
+            pnlChartLoaiPhong.Paint += pnlChartLoaiPhong_Paint;
+            // 
+            // groupBieuDoTopDV
+            // 
+            groupBieuDoTopDV.Controls.Add(pnlChartTopDV);
+            groupBieuDoTopDV.Dock = DockStyle.Fill;
+            groupBieuDoTopDV.Font = new Font("Segoe UI Semibold", 10.5F, FontStyle.Bold);
+            groupBieuDoTopDV.Location = new Point(0, 0);
+            groupBieuDoTopDV.Name = "groupBieuDoTopDV";
+            groupBieuDoTopDV.Size = new Size(550, 560);
+            groupBieuDoTopDV.TabIndex = 0;
+            groupBieuDoTopDV.TabStop = false;
+            groupBieuDoTopDV.Text = "Sản lượng Top Dịch vụ tiêu thụ (Biểu đồ cột GDI+)";
+            // 
+            // pnlChartTopDV
+            // 
+            pnlChartTopDV.BackColor = Color.White;
+            pnlChartTopDV.BorderStyle = BorderStyle.FixedSingle;
+            pnlChartTopDV.Dock = DockStyle.Fill;
+            pnlChartTopDV.Location = new Point(3, 27);
+            pnlChartTopDV.Name = "pnlChartTopDV";
+            pnlChartTopDV.Size = new Size(544, 530);
+            pnlChartTopDV.TabIndex = 0;
+            pnlChartTopDV.Paint += pnlChartTopDV_Paint;
+            // 
+            // tabBangDuLieu
+            // 
+            tabBangDuLieu.BackColor = Color.FromArgb(248, 249, 250);
+            tabBangDuLieu.Controls.Add(groupBoxChiTiet);
+            tabBangDuLieu.Controls.Add(groupBoxTopDV);
+            tabBangDuLieu.Controls.Add(groupBoxLoaiPhong);
+            tabBangDuLieu.Location = new Point(4, 40);
+            tabBangDuLieu.Name = "tabBangDuLieu";
+            tabBangDuLieu.Padding = new Padding(8);
+            tabBangDuLieu.Size = new Size(1120, 576);
+            tabBangDuLieu.TabIndex = 1;
+            tabBangDuLieu.Text = "📋 Bảng số liệu chi tiết";
+            // 
             // groupBoxLoaiPhong
             // 
             groupBoxLoaiPhong.Controls.Add(dtgDoanhThuLoaiPhong);
             groupBoxLoaiPhong.Font = new Font("Segoe UI Semibold", 10.5F, FontStyle.Bold);
-            groupBoxLoaiPhong.Location = new Point(12, 220);
+            groupBoxLoaiPhong.Location = new Point(8, 8);
             groupBoxLoaiPhong.Name = "groupBoxLoaiPhong";
-            groupBoxLoaiPhong.Size = new Size(552, 260);
+            groupBoxLoaiPhong.Size = new Size(540, 240);
             groupBoxLoaiPhong.TabIndex = 5;
             groupBoxLoaiPhong.TabStop = false;
             groupBoxLoaiPhong.Text = "Doanh thu theo Loại phòng";
@@ -375,7 +493,7 @@ namespace QuanLyKhachSan.ThongKe
             dtgDoanhThuLoaiPhong.ReadOnly = true;
             dtgDoanhThuLoaiPhong.RowHeadersVisible = false;
             dtgDoanhThuLoaiPhong.RowHeadersWidth = 51;
-            dtgDoanhThuLoaiPhong.Size = new Size(546, 230);
+            dtgDoanhThuLoaiPhong.Size = new Size(534, 210);
             dtgDoanhThuLoaiPhong.TabIndex = 0;
             // 
             // groupBoxTopDV
@@ -383,9 +501,9 @@ namespace QuanLyKhachSan.ThongKe
             groupBoxTopDV.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             groupBoxTopDV.Controls.Add(dtgTopDichVu);
             groupBoxTopDV.Font = new Font("Segoe UI Semibold", 10.5F, FontStyle.Bold);
-            groupBoxTopDV.Location = new Point(587, 220);
+            groupBoxTopDV.Location = new Point(560, 8);
             groupBoxTopDV.Name = "groupBoxTopDV";
-            groupBoxTopDV.Size = new Size(553, 260);
+            groupBoxTopDV.Size = new Size(550, 240);
             groupBoxTopDV.TabIndex = 6;
             groupBoxTopDV.TabStop = false;
             groupBoxTopDV.Text = "Top dịch vụ sử dụng nhiều nhất";
@@ -403,7 +521,7 @@ namespace QuanLyKhachSan.ThongKe
             dtgTopDichVu.ReadOnly = true;
             dtgTopDichVu.RowHeadersVisible = false;
             dtgTopDichVu.RowHeadersWidth = 51;
-            dtgTopDichVu.Size = new Size(547, 230);
+            dtgTopDichVu.Size = new Size(544, 210);
             dtgTopDichVu.TabIndex = 0;
             // 
             // groupBoxChiTiet
@@ -411,9 +529,9 @@ namespace QuanLyKhachSan.ThongKe
             groupBoxChiTiet.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             groupBoxChiTiet.Controls.Add(dtgChiTietHoaDon);
             groupBoxChiTiet.Font = new Font("Segoe UI Semibold", 10.5F, FontStyle.Bold);
-            groupBoxChiTiet.Location = new Point(12, 490);
+            groupBoxChiTiet.Location = new Point(8, 255);
             groupBoxChiTiet.Name = "groupBoxChiTiet";
-            groupBoxChiTiet.Size = new Size(1128, 350);
+            groupBoxChiTiet.Size = new Size(1102, 313);
             groupBoxChiTiet.TabIndex = 7;
             groupBoxChiTiet.TabStop = false;
             groupBoxChiTiet.Text = "Chi tiết danh sách hóa đơn trong kỳ";
@@ -431,7 +549,7 @@ namespace QuanLyKhachSan.ThongKe
             dtgChiTietHoaDon.ReadOnly = true;
             dtgChiTietHoaDon.RowHeadersVisible = false;
             dtgChiTietHoaDon.RowHeadersWidth = 51;
-            dtgChiTietHoaDon.Size = new Size(1122, 320);
+            dtgChiTietHoaDon.Size = new Size(1096, 283);
             dtgChiTietHoaDon.TabIndex = 0;
             // 
             // FormThongKe
@@ -440,9 +558,7 @@ namespace QuanLyKhachSan.ThongKe
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(248, 249, 250);
             ClientSize = new Size(1152, 850);
-            Controls.Add(groupBoxChiTiet);
-            Controls.Add(groupBoxTopDV);
-            Controls.Add(groupBoxLoaiPhong);
+            Controls.Add(tabControlThongKe);
             Controls.Add(panelCard4);
             Controls.Add(panelCard3);
             Controls.Add(panelCard2);
@@ -466,6 +582,15 @@ namespace QuanLyKhachSan.ThongKe
             panelCard4.ResumeLayout(false);
             panelCard4.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)picCard4).EndInit();
+            tabControlThongKe.ResumeLayout(false);
+            tabBieuDo.ResumeLayout(false);
+            splitBieuDo.Panel1.ResumeLayout(false);
+            splitBieuDo.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)splitBieuDo).EndInit();
+            splitBieuDo.ResumeLayout(false);
+            groupBieuDoLoaiPhong.ResumeLayout(false);
+            groupBieuDoTopDV.ResumeLayout(false);
+            tabBangDuLieu.ResumeLayout(false);
             groupBoxLoaiPhong.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dtgDoanhThuLoaiPhong).EndInit();
             groupBoxTopDV.ResumeLayout(false);
@@ -501,6 +626,14 @@ namespace QuanLyKhachSan.ThongKe
         private PictureBox picCard4;
         private Label lblTitleCard4;
         private Label lblCardSoPhong;
+        private TabControl tabControlThongKe;
+        private TabPage tabBieuDo;
+        private TabPage tabBangDuLieu;
+        private SplitContainer splitBieuDo;
+        private GroupBox groupBieuDoLoaiPhong;
+        private Panel pnlChartLoaiPhong;
+        private GroupBox groupBieuDoTopDV;
+        private Panel pnlChartTopDV;
         private GroupBox groupBoxLoaiPhong;
         private DataGridView dtgDoanhThuLoaiPhong;
         private GroupBox groupBoxTopDV;
