@@ -61,10 +61,23 @@ namespace QuanLyKhachSan.ThongKe
 
         private void FormThongKe_Load(object? sender, EventArgs e)
         {
-            // Mặc định khoảng thời gian: Đầu tháng này đến hôm nay
-            DateTime homNay = DateTime.Today;
-            dtpTuNgay.Value = new DateTime(homNay.Year, homNay.Month, 1);
-            dtpDenNgay.Value = homNay;
+            // Tự động tìm ngày hóa đơn đầu tiên trong CSDL để mặc định khoảng thời gian hiển thị toàn bộ dữ liệu mẫu
+            try
+            {
+                using var db = new HotelManagementContext();
+                var minNgay = db.HoaDons
+                    .Where(h => h.DaXoa != true && h.NgHd != null)
+                    .Select(h => h.NgHd)
+                    .Min();
+
+                dtpTuNgay.Value = minNgay?.Date ?? new DateTime(2022, 1, 1);
+            }
+            catch
+            {
+                dtpTuNgay.Value = new DateTime(2022, 1, 1);
+            }
+
+            dtpDenNgay.Value = DateTime.Today;
 
             CauHinhBangDuLieu();
             NapThongKe();
